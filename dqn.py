@@ -14,20 +14,7 @@ from msgpack_numpy import patch as msgback_numpy_patch
 from torch.utils.tensorboard import SummaryWriter
 msgback_numpy_patch()
 
-GAMMA=0.99
-BATCH_SIZE=32
-BUFFER_SIZE=50000
-MIN_REPLAY_SIZE=1000
-EPSILON_START=1.0
-EPSILON_END=0.02
-EPSILON_DECAY=int(1e6)
-NUM_ENVS = 4
-TARGET_UPDATE_FREQ = 10000 // NUM_ENVS
-LR = 5e-5
-SAVE_PATH = './model'
-SAVE_INTERVAl = 10000
-LOG_INTERVAl = 10
-LOG_DIR = "./logs/breakout"
+from configs import *
 
 def nature_cnn(observation_space, depths=(32, 64, 64), final_layer=512):
     n_input_channels = observation_space.shape[0]
@@ -207,7 +194,7 @@ for step in itertools.count():
         target_net.load_state_dict(online_net.state_dict())
 
     # Logging
-    if step % LOG_INTERVAl == 0:
+    if step % LOG_INTERVAL == 0:
         rew_mean = np.mean([e['r'] for e in epinfos_buffer]) or 0
         len_mean = np.mean([e['l'] for e in epinfos_buffer]) or 0
         print()
@@ -220,6 +207,6 @@ for step in itertools.count():
         summary_writer.add_scalar('Avg Ep Len', len_mean, global_step=step)
         summary_writer.add_scalar('Episodes', episode_count, global_step=step)
 
-    if step % SAVE_INTERVAl == 0 and step != 0:
+    if step % SAVE_INTERVAL == 0 and step != 0:
         print("Saving...")
         online_net.save(SAVE_PATH, "breakout.pack")
