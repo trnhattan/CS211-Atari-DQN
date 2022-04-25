@@ -65,7 +65,7 @@ LOGGER.info(f"{colorstr('Optimizer:')} {optimizer}")
 LOGGER.info(f"{colorstr('BATCH_SIZE:')} {BATCH_SIZE}")
 BATCH_SIZE
 LOGGER.info(f"{colorstr('EPSILON_DECAY:')} {EPSILON_DECAY}")
-LOGGER.info(f"{colorstr('EPSILON_START:')} {EPSILON_START}    -    EPSILON_END: {EPSILON_END}")
+LOGGER.info(f"{colorstr('EPSILON_START:')} {EPSILON_START}    -    {colorstr('EPSILON_END:')} {EPSILON_END}")
 LOGGER.info(f"{colorstr('TARGET_UPDATE_FREQ:')} {TARGET_UPDATE_FREQ}")
 LOGGER.info(f"{colorstr('SAVE_PATH:')} {SAVE_PATH}/breakout.pack")
 
@@ -113,7 +113,7 @@ with tqdm(range(N_STEPS), total=N_STEPS,
         mem = f'{torch.cuda.memory_reserved() / 1E9 if torch.cuda.is_available() else 0:.3g} GB'
         desc = ('%35s' + '%15.6g' * 3) % (mem, rew_mean, len_mean, episode_count)
 
-
+        pbar.set_description_str(desc)
         wandb.log({
             "Average Reward": rew_mean,
             "Average Episode Length": rew_mean,
