@@ -1,9 +1,9 @@
 from .config import GAMMA, BATCH_SIZE, BUFFER_SIZE, MIN_REPLAY_SIZE, \
                     EPSILON_START, EPSILON_END, EPSILON_DECAY, NUM_ENVS, \
                     TARGET_UPDATE_FREQ, LR, SAVE_PATH, SAVE_INTERVAL, \
-                    LOG_INTERVAL, LOG_DIR
+                    LOG_INTERVAL, LOG_DIR, N_STEPS
 
 __all__ = ['GAMMA', 'BATCH_SIZE', 'BUFFER_SIZE', 'MIN_REPLAY_SIZE',
            'EPSILON_START', 'EPSILON_END', 'EPSILON_DECAY', 'NUM_ENVS',
            'TARGET_UPDATE_FREQ', 'LR', 'SAVE_PATH', 'SAVE_INTERVAL',
-           'LOG_INTERVAL', 'LOG_DIR']
+           'LOG_INTERVAL', 'LOG_DIR', 'N_STEPS']
