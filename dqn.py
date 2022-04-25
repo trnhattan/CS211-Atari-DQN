@@ -20,6 +20,7 @@ from model import Network
 from utils import *
 
 device = torch.device('cuda: 0' if torch.cuda.is_available() else 'cpu')
+wandb = init_wandb()
 
 make_env = lambda: Monitor(make_atari_deepmind("ALE/Breakout-v5", scale_values=True), allow_early_resets=True)
 
@@ -33,7 +34,6 @@ epinfos_buffer = deque([], maxlen=100)
 episode_count = 0
 
 # summary_writer = SummaryWriter(LOG_DIR)
-wandb = init_wandb()
 
 
 online_net = Network(env, device=device).to(device)

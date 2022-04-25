@@ -1,5 +1,5 @@
 numpy
-gym
+gym==0.23.1
 gym[atari]
 opencv-python
 torch --extra-index-url https://download.pytorch.org/whl/cu113
