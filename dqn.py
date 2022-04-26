@@ -123,5 +123,5 @@ with tqdm(range(N_STEPS), total=N_STEPS,
         })
 
         if step % SAVE_INTERVAL == 0 and step != 0:
-            LOGGER.info(f"Saving model at {step}...")
-            online_net.save(os.path.join(SAVE_PATH, f"_at{step % SAVE_INTERVAL}k.pack"))
+            LOGGER.info(f"\n{colorstr('black', 'bold', f'Saving model at {step}...')}")
+            online_net.save(os.path.join(SAVE_PATH, f"breakout_b32_at{step // SAVE_INTERVAL}k.pack"))
