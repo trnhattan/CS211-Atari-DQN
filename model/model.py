@@ -98,9 +98,9 @@ class Network(nn.Module):
 
     def save(self, save_path):
         params = {k: t.detach().cpu().numpy() for k, t in self.state_dict().items()}
-        params_data = msgpack.dump(params)
+        params_data = msgpack.dumps(params)
 
-        os.makedir(os.path.dirname(save_path), exist_ok=True)
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
         with open(save_path, 'wb') as f:
             f.write(params_data)
 

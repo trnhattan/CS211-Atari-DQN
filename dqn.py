@@ -19,7 +19,10 @@ from configs import *
 from model import Network
 from utils import *
 
-device = torch.device('cuda: 0' if torch.cuda.is_available() else 'cpu')
+# Numpy warnings ignore
+np.seterr(all="ignore")
+
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 wandb = init_wandb()
 
 make_env = lambda: Monitor(make_atari_deepmind("ALE/Breakout-v5", scale_values=True), allow_early_resets=True)
@@ -55,10 +58,8 @@ for _ in range(MIN_REPLAY_SIZE):
 
     obses = new_obses
 
-
 # Main Training Loop
 obses = env.reset()
-
 
 
 LOGGER.info(f"{colorstr('Optimizer:')} {optimizer}")
@@ -67,13 +68,14 @@ BATCH_SIZE
 LOGGER.info(f"{colorstr('EPSILON_DECAY:')} {EPSILON_DECAY}")
 LOGGER.info(f"{colorstr('EPSILON_START:')} {EPSILON_START}    -    {colorstr('EPSILON_END:')} {EPSILON_END}")
 LOGGER.info(f"{colorstr('TARGET_UPDATE_FREQ:')} {TARGET_UPDATE_FREQ}")
-LOGGER.info(f"{colorstr('SAVE_PATH:')} {SAVE_PATH}/breakout.pack")
+LOGGER.info(f"{colorstr('SAVE_PATH:')} {SAVE_PATH}")
 
 LOGGER.info(colorstr('black', 'bold', '%20s' + '%15s' * 4) % 
                     ('Training:', 'gpu_mem', 'AvgRew', 'AvgEpLen', 'Episodes'))
+
 with tqdm(range(N_STEPS), total=N_STEPS, 
-          bar_format='{desc} {percentage:>7.0f}%|{bar:10}{r_bar}{bar:-10b}',
-          unit='batch') as pbar:
+          bar_format='{desc} {percentage:>7.0f}%|{bar:20}{r_bar}{bar:-10b}',
+          unit='step') as pbar:
     for step in pbar:
         epsilon = np.interp(step * NUM_ENVS, [0, EPSILON_DECAY], [EPSILON_START, EPSILON_END])
         
@@ -119,19 +121,7 @@ with tqdm(range(N_STEPS), total=N_STEPS,
             "Average Episode Length": rew_mean,
             "Episodes": episode_count
         })
-        # Logging
-        # if step % LOG_INTERVAL == 0:
-
-        #     print()
-        #     print('Step:', step)
-        #     print('Avg Rew', rew_mean)
-        #     print('Avg Ep Len', len_mean)
-        #     print('Episodes', episode_count)
-
-        #     summary_writer.add_scalar('AvgRew', rew_mean, global_step=step)
-        #     summary_writer.add_scalar('AvgEpLen', len_mean, global_step=step)
-        #     summary_writer.add_scalar('Episodes', episode_count, global_step=step)
 
         if step % SAVE_INTERVAL == 0 and step != 0:
             LOGGER.info(f"Saving model at {step}...")
-            online_net.save(SAVE_PATH)
+            online_net.save(os.path.join(SAVE_PATH, f"_at{step % SAVE_INTERVAL}k.pack"))
