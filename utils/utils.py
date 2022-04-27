@@ -5,13 +5,18 @@ import wandb
 logging.basicConfig(format="%(message)s", level=logging.INFO)
 LOGGER = logging.getLogger('Deep-Q-Learning-Network')
 
-def init_wandb(project="Deep-Q-Learning-Network", entity='devzxje', name="DQN-v1", relogin=False, **kwargs):
+def init_wandb(project="Deep-Q-Learning-Network", entity='devzxje', name="DQN-v1", id="DQN-v1", session_resume=None, relogin=False):
     if relogin:
         os.system('wandb login --relogin')
     else:
         os.system('wandb login')
-        
-    wandb.init(project=project, entity=entity, name=name, **kwargs)
+
+    if session_resume is not None:
+        LOGGER.info(colorstr('black', 'bold', f'Continue last run'))
+        wandb.init(project=project, entity=entity, id=id, resume=session_resume)
+    else:
+        wandb.init(project=project, entity=entity, name=name, id=id)
+
     return wandb
 
 def colorstr(*input):

@@ -25,11 +25,23 @@ np.seterr(all="ignore")
 
 def train(env_id="ALE/Breakout-v5", 
           resume=False, 
-          file_weight_path=None, 
+          file_weight_path=None,
+          run_time=0, 
           file_saveName="breakout_b32_at", 
+          project="Deep-Q-Learning-Network", 
+          entity='devzxje', 
+          name="DQN-v1", 
+          id_name="DQN-v1",
+          session_resume=None,
+          relogin=False,
           device="cpu"):
 
-    wandb = init_wandb()
+    wandb = init_wandb(project=project, 
+                       entity=entity, 
+                       name=name, 
+                       id=id_name,
+                       session_resume=session_resume,
+                       relogin=relogin)
 
     make_env = lambda: Monitor(make_atari_deepmind(env_id=env_id, scale_values=True), allow_early_resets=True)
 
@@ -135,7 +147,10 @@ def train(env_id="ALE/Breakout-v5",
 
             if step % SAVE_INTERVAL == 0 and step != 0:
                 LOGGER.info(f"\n{colorstr('black', 'bold', f'Saving model at {step}...')}")
-                online_net.save(os.path.join(SAVE_PATH, f"{file_saveName}{step // SAVE_INTERVAL}0k.pack"))
+                if run_time == 0:
+                    online_net.save(os.path.join(SAVE_PATH, f"{file_saveName}{step // SAVE_INTERVAL}0k.pack"))
+                else:
+                    online_net.save(os.path.join(SAVE_PATH, f"{file_saveName}{run_time * (step // SAVE_INTERVAL)}0k.pack"))
 
 if __name__ == "__main__":
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -144,13 +159,27 @@ if __name__ == "__main__":
     parser.add_argument('--resume', default=False, type=bool, help="continue traning")
     parser.add_argument('--file_weight_path', type=str, help="pretrained weight path")
     parser.add_argument('--file_saveName', type=str, help="weight file name")
+    parser.add_argument('--run_time', default=1, type=int, help="current run time")
+
+    parser.add_argument('--project', default="Deep-Q-Learning-Network", type=str, help="wandb project name")
+    parser.add_argument('--entity', default="devzxje", type=str, help="wandb username")
+    parser.add_argument('--session_name', default="DQN-v1", type=str, help="wandb running title")
+    parser.add_argument('--id_name', default="DQN-v1", type=str, help="wandb running id")
+    parser.add_argument('--session_resume', default=None, help="wandb continue existed seasion_name executed")
+    parser.add_argument('--relogin', default=False, type=bool, help="wandb force relogin")
+
     parser.add_argument('--device', default=device, help="select GPU or CPU for session")
 
     args = parser.parse_args()
-
 
     train(env_id=args.env_id, 
           resume= args.resume, 
           file_weight_path=args.file_weight_path, 
           file_saveName= args.file_saveName, 
+          project=args.project,
+          entity=args.entity,
+          name=args.session_name,
+          id_name=args.id_name,
+          session_resume=args.session_resume,
+          relogin=args.relogin,
           device=args.device)
