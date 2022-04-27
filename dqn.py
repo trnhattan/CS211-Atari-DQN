@@ -94,7 +94,7 @@ def train(env_id="ALE/Breakout-v5",
     LOGGER.info(colorstr('black', 'bold', '%20s' + '%15s' * 4) % 
                         ('Training:', 'gpu_mem', 'AvgRew', 'AvgEpLen', 'Episodes'))
 
-    with tqdm(range(N_STEPS + 1), total=N_STEPS + 1, 
+    with tqdm(itertools.count(), total=100, 
             bar_format='{desc} {percentage:>7.0f}%|{bar:20}{r_bar}{bar:-10b}',
             unit='step') as pbar:
         for step in pbar:
@@ -141,16 +141,17 @@ def train(env_id="ALE/Breakout-v5",
 
             wandb.log({
                 "Average Reward": rew_mean,
-                "Average Episode Length": rew_mean,
+                "Average Episode Length": len_mean,
                 "Episodes": episode_count
             })
 
             if step % SAVE_INTERVAL == 0 and step != 0:
                 LOGGER.info(f"\n{colorstr('black', 'bold', f'Saving model at {step}...')}")
-                if run_time == 0:
+                if run_time == 1:
                     online_net.save(os.path.join(SAVE_PATH, f"{file_saveName}{step // SAVE_INTERVAL}0k.pack"))
                 else:
                     online_net.save(os.path.join(SAVE_PATH, f"{file_saveName}{run_time * (step // SAVE_INTERVAL)}0k.pack"))
+                pbar.update(5)
 
 if __name__ == "__main__":
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -176,6 +177,7 @@ if __name__ == "__main__":
           resume= args.resume, 
           file_weight_path=args.file_weight_path, 
           file_saveName= args.file_saveName, 
+          run_time=args.run_time,
           project=args.project,
           entity=args.entity,
           name=args.session_name,
