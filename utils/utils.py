@@ -5,8 +5,12 @@ import wandb
 logging.basicConfig(format="%(message)s", level=logging.INFO)
 LOGGER = logging.getLogger('Deep-Q-Learning-Network')
 
-def init_wandb(project="Deep-Q-Learning-Network", entity='devzxje', name="DQN-v1", **kwargs):
-    os.system('wandb login --relogin')
+def init_wandb(project="Deep-Q-Learning-Network", entity='devzxje', name="DQN-v1", relogin=False, **kwargs):
+    if relogin:
+        os.system('wandb login --relogin')
+    else:
+        os.system('wandb login')
+        
     wandb.init(project=project, entity=entity, name=name, **kwargs)
     return wandb
 

@@ -66,14 +66,14 @@ class Network(nn.Module):
         with open(load_path, 'rb') as f:
             params_numpy = msgpack.loads(f.read())
 
-        params = {k: torch.as_tensor(v, device=self.device) for k,v in params_numpy.items()}
+        params = {k: torch.as_tensor(v, device=self.device) for k, v in params_numpy.items()}
 
         self.load_state_dict(params)
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print('device:', device)
 
-make_env = lambda: make_atari_deepmind('Breakout-v0')
+make_env = lambda: make_atari_deepmind("ALE/Breakout-v5")
 
 vec_env = DummyVecEnv([make_env for _ in range(1)])
 
@@ -82,25 +82,49 @@ env = BatchedPytorchFrameStack(vec_env, k=4)
 net = Network(env, device)
 net = net.to(device)
 
-net.load('./atari_model.pack')
+net.load('./weights/breakout_b32_at990k.pack')
 
 obs = env.reset()
 beginning_episode = True
-for t in itertools.count():
-    if isinstance(obs[0], PytorchLazyFrames):
-        act_obs = np.stack([o.get_frames() for o in obs])
-        action = net.act(act_obs, 0.0)
-    else:
-        action = net.act(obs, 0.0)
 
-    if beginning_episode:
-        action = [1]
-        beginning_episode = False
 
-    obs, rew, done, _ = env.step(action)
-    env.render()
-    time.sleep(0.02)
+for t in range(5):
+    done=False
+    while not done:
+        # if beginning_episode:
+        #     action = [0]
+        #     done=False
+        if isinstance(obs[0], PytorchLazyFrames):
+            act_obs = np.stack([o.get_frames() for o in obs])
+            action = net.act(act_obs, 0.0)
+        else:
+            action = net.act(obs, 0.0)
 
-    if done[0]:
-        obs = env.reset()
-        beginning_episode = True
+        print(action)
+
+        obs, rew, done, _ = env.step(action)
+        time.sleep(0.02)
+
+# for t in range(5):
+
+#     if beginning_episode:
+#         action = [1]
+#         done=False
+#         beginning_episode = False
+
+#         while not done:
+#             if isinstance(obs[0], PytorchLazyFrames):
+#                 act_obs = np.stack([o.get_frames() for o in obs])
+#                 action = net.act(act_obs, 0.0)
+#             else:
+#                 action = net.act(obs, 0.0)
+#             print(action)
+#             time.sleep(0.001)
+#             obs, rew, done, _ = env.step(action)
+#             # _, _, done, _ = env.step(action)
+
+    # env.render()
+
+if done:
+    obs = env.reset()
+    beginning_episode = True

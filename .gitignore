@@ -129,5 +129,7 @@ dmypy.json
 .pyre/
 
 .vscode/
-.logs/
-./wandb/
+logs/
+wandb/
+weights/
+test.py
