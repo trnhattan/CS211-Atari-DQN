@@ -53,8 +53,8 @@ class Network(nn.Module):
         obses_t = torch.as_tensor(obs, dtype=torch.float32, device=self.device)
         q_values = self(obses_t)
 
-        max_q_index = torch.argmax(q_values, dim=1)
-        actions = max_q_index.detach().tolist()
+        max_q_indices = torch.argmax(q_values, dim=1)
+        actions = max_q_indices.detach().tolist()
 
         for i in range(len(actions)):
             rnd_sample = random.random()
@@ -107,6 +107,7 @@ class Network(nn.Module):
     def load(self, load_file_path):
         if not os.path.isfile(load_file_path):
             raise FileNotFoundError(load_file_path)
+            
         with open(load_file_path, 'rb') as f:
             params_numpy = msgpack.loads(f.read())
 

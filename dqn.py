@@ -60,6 +60,7 @@ def train(env_id="ALE/Breakout-v5",
     target_net = Network(env, device=device).to(device)
 
     if resume and file_weight_path:
+        LOGGER.info(colorstr('black', 'bold', f"Loading weights from {file_weight_path}..."))
         online_net.load(file_weight_path)
 
     target_net.load_state_dict(online_net.state_dict())
@@ -67,12 +68,13 @@ def train(env_id="ALE/Breakout-v5",
     optimizer = torch.optim.Adam(online_net.parameters(), lr=LR)
 
     # Initialize replay buffer
-
     obses = env.reset()
+
     for _ in range(MIN_REPLAY_SIZE):
         actions = [env.action_space.sample() for _ in range(NUM_ENVS)]
 
         new_obses, rews, dones, infos = env.step(actions)
+
         for obs, action, rew, done, new_obs in zip(obses, actions, rews, dones, new_obses):
             transition = (obs, action, rew, done, new_obs)
             replay_buffer.append(transition)
@@ -109,6 +111,7 @@ def train(env_id="ALE/Breakout-v5",
                 actions = online_net.act(obses, epsilon)
 
             new_obses, rews, dones, infos = env.step(actions)
+
             for obs, action, rew, done, new_obs, info in zip(obses, actions, rews, dones, new_obses, infos):
                 transition = (obs, action, rew, done, new_obs)
                 replay_buffer.append(transition)
