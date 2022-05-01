@@ -66,14 +66,14 @@ class Network(nn.Module):
         with open(load_path, 'rb') as f:
             params_numpy = msgpack.loads(f.read())
 
-        params = {k: torch.as_tensor(v, device=self.device) for k,v in params_numpy.items()}
+        params = {k: torch.as_tensor(v, device=self.device) for k, v in params_numpy.items()}
 
         self.load_state_dict(params)
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print('device:', device)
 
-make_env = lambda: make_atari_deepmind('Breakout-v0')
+make_env = lambda: make_atari_deepmind("BreakoutNoFrameskip-v4", observe_mode='human')
 
 vec_env = DummyVecEnv([make_env for _ in range(1)])
 
@@ -82,10 +82,11 @@ env = BatchedPytorchFrameStack(vec_env, k=4)
 net = Network(env, device)
 net = net.to(device)
 
-net.load('./atari_model.pack')
+net.load('./weights/breakout_b32_at1170k.pack')
 
 obs = env.reset()
 beginning_episode = True
+
 for t in itertools.count():
     if isinstance(obs[0], PytorchLazyFrames):
         act_obs = np.stack([o.get_frames() for o in obs])
@@ -98,9 +99,9 @@ for t in itertools.count():
         beginning_episode = False
 
     obs, rew, done, _ = env.step(action)
-    env.render()
+    env.render(mode='rgb_array')
     time.sleep(0.02)
 
-    if done[0]:
+    if done:
         obs = env.reset()
         beginning_episode = True

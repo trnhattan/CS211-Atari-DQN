@@ -10,7 +10,8 @@ TARGET_UPDATE_FREQ = 10000 // NUM_ENVS
 SAVE_INTERVAL = 10000
 LOG_INTERVAL = 10
 LR = 5e-5
+N_STEPS = int(1e6)
 
 
-SAVE_PATH = './model'
+SAVE_PATH = './weights'
 LOG_DIR = "./logs/breakout"
