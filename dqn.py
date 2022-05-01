@@ -23,7 +23,7 @@ from utils import *
 # Numpy warnings ignore
 np.seterr(all="ignore")
 
-def train(env_id="ALE/Breakout-v5", 
+def train(env_id="BreakoutNoFrameskip-v4", 
           resume=False, 
           file_weight_path=None,
           run_time=0, 
@@ -165,12 +165,12 @@ if __name__ == "__main__":
     parser.add_argument('--file_saveName', type=str, help="weight file name")
     parser.add_argument('--run_time', default=1, type=int, help="current run time")
 
-    parser.add_argument('--project', default="Deep-Q-Learning-Network", type=str, help="wandb project name")
-    parser.add_argument('--entity', default="devzxje", type=str, help="wandb username")
-    parser.add_argument('--session_name', default="DQN-v1", type=str, help="wandb running title")
-    parser.add_argument('--id_name', default="DQN-v1", type=str, help="wandb running id")
-    parser.add_argument('--session_resume', default=None, help="wandb continue existed seasion_name executed")
-    parser.add_argument('--relogin', default=False, type=bool, help="wandb force relogin")
+    parser.add_argument('--wandb_project', default="Deep-Q-Learning-Network", type=str, help="wandb project name")
+    parser.add_argument('--wandb_entity', default="devzxje", type=str, help="wandb username")
+    parser.add_argument('--wandb_session', default="DQN-v1", type=str, help="wandb running title")
+    parser.add_argument('--wandb_id', default="DQN-v1", type=str, help="wandb running id")
+    parser.add_argument('--wandb_resume', default=None, help="wandb continue existed seasion_name executed")
+    parser.add_argument('--wandb_relogin', default=False, type=bool, help="wandb force relogin")
 
     parser.add_argument('--device', default=device, help="select GPU or CPU for session")
 
@@ -181,10 +181,10 @@ if __name__ == "__main__":
           file_weight_path=args.file_weight_path, 
           file_saveName= args.file_saveName, 
           run_time=args.run_time,
-          project=args.project,
-          entity=args.entity,
-          name=args.session_name,
-          id_name=args.id_name,
-          session_resume=args.session_resume,
-          relogin=args.relogin,
+          project=args.wandb_project,
+          entity=args.wandb_entity,
+          name=args.wandb_session,
+          id_name=args.wandb_id,
+          session_resume=args.wandb_resume,
+          relogin=args.wandb_relogin,
           device=args.device)
