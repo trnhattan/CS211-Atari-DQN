@@ -33,11 +33,12 @@ def nature_cnn(observation_space, depths=(32, 64, 64), final_layer=512):
 
 
 class Network(nn.Module):
-    def __init__(self, env, device):
+    def __init__(self, env, device, model=None):
         super().__init__()
 
         self.num_actions = env.action_space.n
         self.device = device
+        self.model = model
 
         conv_net = nature_cnn(env.observation_space)
 
@@ -84,10 +85,27 @@ class Network(nn.Module):
 
         # Compute Targets
         # targets = r + gamma * target q vals * (1 - dones)
-        target_q_values = target_net(new_obses_t)
-        max_target_q_values = target_q_values.max(dim=1, keepdim=True)[0]
+        with torch.no_grad():
+            if self.model == 'double':
+                targets_online_q_values = self(new_obses_t)
+                targets_online_best_q_indices = targets_online_q_values.argmax(dim=1, keepdim=True)
 
-        targets = rews_t + GAMMA * (1 - dones_t) * max_target_q_values
+                targets_target_q_values = target_net(new_obses_t)
+                targets_selected_q_values = torch.gather(input=targets_target_q_values, dim=1, index=targets_online_best_q_indices)
+
+                targets = rews_t + GAMMA * (1 - dones_t) * targets_selected_q_values
+
+            elif self.model == 'dueling':
+                pass
+
+            elif self.model == 'base':
+                target_q_values = target_net(new_obses_t)
+                max_target_q_values = target_q_values.max(dim=1, keepdim=True)[0]
+
+                targets = rews_t + GAMMA * (1 - dones_t) * max_target_q_values
+
+            else:
+                raise NotImplementedError(f"{self.model} not found")
 
         # Compute Loss
         q_values = self(obses_t)

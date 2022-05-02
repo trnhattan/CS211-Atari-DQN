@@ -1,3 +1,4 @@
+import argparse
 import os, random
 import numpy as np
 import torch
@@ -70,38 +71,47 @@ class Network(nn.Module):
 
         self.load_state_dict(params)
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-print('device:', device)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('model_weight_path', type=str, help='model weight file path')
+    parser.add_argument('--env_id', default='BreakoutNoFrameskip-v4', type=str, help='enviroment id')
 
-make_env = lambda: make_atari_deepmind("BreakoutNoFrameskip-v4", observe_mode='human')
+    args = parser.parse_args()
 
-vec_env = DummyVecEnv([make_env for _ in range(1)])
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    print('device:', device)
 
-env = BatchedPytorchFrameStack(vec_env, k=4)
+    make_env = lambda: make_atari_deepmind(env_id=args.env_id, observe_mode='human', scale_values=True)
+    # make_env = lambda: make_atari_deepmind(env_id="BreakoutNoFrameskip-v4", observe_mode='human')
 
-net = Network(env, device)
-net = net.to(device)
+    vec_env = DummyVecEnv([make_env for _ in range(1)])
 
-net.load('./weights/breakout_b32_at1170k.pack')
+    env = BatchedPytorchFrameStack(vec_env, k=4)
 
-obs = env.reset()
-beginning_episode = True
+    net = Network(env, device)
+    net = net.to(device)
 
-for t in itertools.count():
-    if isinstance(obs[0], PytorchLazyFrames):
-        act_obs = np.stack([o.get_frames() for o in obs])
-        action = net.act(act_obs, 0.0)
-    else:
-        action = net.act(obs, 0.0)
+    net.load(args.model_weight_path)
+    # net.load("./weights/breakout_noframeskip_at300k.pack")
 
-    if beginning_episode:
-        action = [1]
-        beginning_episode = False
+    obs = env.reset()
+    beginning_episode = True
 
-    obs, rew, done, _ = env.step(action)
-    env.render(mode='rgb_array')
-    time.sleep(0.02)
+    for t in itertools.count():
+        if isinstance(obs[0], PytorchLazyFrames):
+            act_obs = np.stack([o.get_frames() for o in obs])
+            action = net.act(act_obs, 0.0)
+        else:
+            action = net.act(obs, 0.0)
 
-    if done:
-        obs = env.reset()
-        beginning_episode = True
+        if beginning_episode:
+            action = [1]
+            beginning_episode = False
+
+        obs, rew, done, _ = env.step(action)
+        env.render(mode='rgb_array')
+        time.sleep(0.002)
+
+        if done:
+            obs = env.reset()
+            beginning_episode = True

@@ -24,9 +24,9 @@ from utils import *
 np.seterr(all="ignore")
 
 def train(env_id="BreakoutNoFrameskip-v4", 
-          model = None,
           resume=False, 
           file_weight_path=None,
+          run_time=0, 
           file_saveName="breakout_b32_at", 
           project="Deep-Q-Learning-Network", 
           entity='devzxje', 
@@ -56,8 +56,8 @@ def train(env_id="BreakoutNoFrameskip-v4",
 
     # summary_writer = SummaryWriter(LOG_DIR)
 
-    online_net = Network(env, device=device, model=model).to(device)
-    target_net = Network(env, device=device, model=model).to(device)
+    online_net = Network(env, device=device).to(device)
+    target_net = Network(env, device=device).to(device)
 
     if resume and file_weight_path:
         LOGGER.info(colorstr('black', 'bold', f"Loading weights from {file_weight_path}..."))
@@ -83,16 +83,6 @@ def train(env_id="BreakoutNoFrameskip-v4",
 
     # Main Training Loop
     obses = env.reset()
-
-
-    if model == 'base':
-        LOGGER.info(f"{colorstr('Model: Normal Deep Q-Network')}")
-    elif model == 'double':
-        LOGGER.info(f"{colorstr('Model: Double Deep Q-Network')}")
-    elif model == 'dueling':
-        LOGGER.info(f"{colorstr('Model: Dueling Deep Q-Network')}")
-    else:
-        raise NotImplementedError(f"{model} not found")
 
 
     LOGGER.info(f"{colorstr('Optimizer:')} {optimizer}")
