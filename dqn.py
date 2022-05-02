@@ -168,6 +168,7 @@ def train(env_id="BreakoutNoFrameskip-v4",
 if __name__ == "__main__":
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     parser = argparse.ArgumentParser()
+    parser.add_argument('--model', default='base', type=str, help='select model: base, double, dueling')
     parser.add_argument('--env_id', default='ALE/Breakout-v5', type=str, help='enviroment id')
     parser.add_argument('--resume', default=False, type=bool, help="continue traning")
     parser.add_argument('--file_weight_path', type=str, help="pretrained weight path")
