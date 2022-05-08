@@ -110,7 +110,7 @@ if __name__ == "__main__":
 
         obs, rew, done, _ = env.step(action)
         env.render(mode='rgb_array')
-        time.sleep(0.002)
+        time.sleep(0.0002)
 
         if done:
             obs = env.reset()

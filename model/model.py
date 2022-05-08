@@ -42,10 +42,17 @@ class Network(nn.Module):
 
         conv_net = nature_cnn(env.observation_space)
 
-        self.net = nn.Sequential(
-            conv_net,
-            nn.Linear(512, self.num_actions)
-        )
+        if model == 'base' or model == 'double':
+            self.net = nn.Sequential(
+                conv_net,
+                nn.Linear(512, self.num_actions)
+            )
+
+        elif model == 'dueling':
+            pass
+
+        else:
+            raise NotImplementedError(f"{self.model} not found")
 
     def forward(self, x):
         return self.net(x)
@@ -96,7 +103,14 @@ class Network(nn.Module):
                 targets = rews_t + GAMMA * (1 - dones_t) * targets_selected_q_values
 
             elif self.model == 'dueling':
-                pass
+                targets_online_q_values = self(new_obses_t)
+                targets_target_q_values = target_net(new_obses_t)
+
+                targets_online_best_q_indices = targets_online_q_values.argmax(dim=1, keepdim=True)
+
+                targets_selected_q_values = torch.gather(input=targets_target_q_values, dim=1, index=targets_online_best_q_indices)
+
+                targets = rews_t + GAMMA * (1 - dones_t) * targets_selected_q_values
 
             elif self.model == 'base':
                 target_q_values = target_net(new_obses_t)
@@ -132,3 +146,49 @@ class Network(nn.Module):
         params = {k: torch.as_tensor(v, device=self.device) for k, v in params_numpy.items()}
 
         self.load_state_dict(params)
+
+class DuelingDQN(Network):
+    def __init__(self, env, device, model='dueling'):
+        super().__init__(env, device, model)
+        n_input_channels = env.observation_space.shape[0]
+        depths = (32, 64, 64)
+        final_layer = 512
+
+        self.cnn = nn.Sequential(
+            nn.Conv2d(n_input_channels, depths[0], kernel_size=8, stride=4), 
+            nn.ReLU(),
+            nn.Conv2d(depths[0], depths[1], kernel_size=4, stride=2), 
+            nn.ReLU(),
+            nn.Conv2d(depths[1], depths[2], kernel_size=3, stride=1), 
+            nn.ReLU(),
+            nn.Flatten(),
+        )
+
+        with torch.no_grad():
+            n_flatten = self.cnn(torch.as_tensor(env.observation_space.sample()[None]).float()).shape[1]
+
+        self.fc_V = nn.Sequential(
+            nn.Linear(n_flatten, final_layer),
+            nn.ReLU()
+        )
+        
+        self.fc_A = nn.Sequential(
+            nn.Linear(n_flatten, final_layer),
+            nn.ReLU()
+        )
+
+        self.V = nn.Linear(final_layer, 1)
+        self.A = nn.Linear(final_layer, self.num_actions)
+
+    def forward(self, x):
+        cnn = self.cnn(x)
+
+        V_out = self.fc_V(cnn)
+        A_out = self.fc_A(cnn)
+
+        V = self.V(V_out)
+        A = self.A(A_out)
+
+        Q = V + A - torch.mean(A, dim=1, keepdim=True)
+
+        return Q

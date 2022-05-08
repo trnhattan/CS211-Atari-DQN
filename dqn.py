@@ -9,6 +9,7 @@ import numpy as np
 import random
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+from baselines_wrappers.subproc_vec_env import SubprocVecEnv
 from pytorch_wrappers import BatchedPytorchFrameStack, PytorchLazyFrames, make_atari_deepmind
 from baselines_wrappers import Monitor, DummyVecEnv
 import msgpack
@@ -23,8 +24,8 @@ from utils import *
 # Numpy warnings ignore
 np.seterr(all="ignore")
 
-def train(env_id="BreakoutNoFrameskip-v4", 
-          model = None,
+def train(model: str,
+          env_id="BreakoutNoFrameskip-v4", 
           resume=False, 
           file_weight_path=None,
           file_saveName="breakout_b32_at", 
@@ -45,7 +46,8 @@ def train(env_id="BreakoutNoFrameskip-v4",
 
     make_env = lambda: Monitor(make_atari_deepmind(env_id=env_id, scale_values=True), allow_early_resets=True)
 
-    vec_env = DummyVecEnv([make_env for  _ in range(NUM_ENVS)])
+    # vec_env = DummyVecEnv([make_env for  _ in range(NUM_ENVS)])
+    vec_env = SubprocVecEnv([make_env for _ in range(NUM_ENVS)])
 
     env = BatchedPytorchFrameStack(vec_env, k = 4)
 
@@ -97,6 +99,8 @@ def train(env_id="BreakoutNoFrameskip-v4",
 
     LOGGER.info(f"{colorstr('Optimizer:')} {optimizer}")
     LOGGER.info(f"{colorstr('BATCH_SIZE:')} {BATCH_SIZE}")
+    LOGGER.info(f"{colorstr('BUFFER_SIZE:')} {BUFFER_SIZE}")
+    LOGGER.info(f"{colorstr('MIN_REPLAY_SIZE:')} {MIN_REPLAY_SIZE}")
     BATCH_SIZE
     LOGGER.info(f"{colorstr('EPSILON_DECAY:')} {EPSILON_DECAY}")
     LOGGER.info(f"{colorstr('EPSILON_START:')} {EPSILON_START}    -    {colorstr('EPSILON_END:')} {EPSILON_END}")
@@ -186,11 +190,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    train(env_id=args.env_id, 
+    train(model=args.model, 
+          env_id=args.env_id, 
           resume= args.resume, 
           file_weight_path=args.file_weight_path, 
           file_saveName= args.file_saveName, 
-          run_time=args.run_time,
           project=args.wandb_project,
           entity=args.wandb_entity,
           name=args.wandb_session,
