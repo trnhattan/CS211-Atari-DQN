@@ -18,7 +18,7 @@ from msgpack_numpy import patch as msgback_numpy_patch
 msgback_numpy_patch()
 
 from configs import *
-from model import Network
+from model import Network, DuelingDQN
 from utils import *
 
 # Numpy warnings ignore
@@ -58,8 +58,20 @@ def train(model: str,
 
     # summary_writer = SummaryWriter(LOG_DIR)
 
-    online_net = Network(env, device=device, model=model).to(device)
-    target_net = Network(env, device=device, model=model).to(device)
+    if model == 'base':
+        LOGGER.info(f"{colorstr('Model: Normal Deep Q-Network')}")
+        online_net = Network(env, device=device, model=model).to(device)
+        target_net = Network(env, device=device, model=model).to(device)
+    elif model == 'double':
+        LOGGER.info(f"{colorstr('Model: Double Deep Q-Network')}")
+        online_net = Network(env, device=device, model=model).to(device)
+        target_net = Network(env, device=device, model=model).to(device)
+    elif model == 'dueling':
+        LOGGER.info(f"{colorstr('Model: Dueling Deep Q-Network')}")
+        online_net = DuelingDQN(env, device=device, model=model).to(device)
+        target_net = DuelingDQN(env, device=device, model=model).to(device)
+    else:
+        raise NotImplementedError(f"{model} not found")
 
     if resume and file_weight_path:
         LOGGER.info(colorstr('black', 'bold', f"Loading weights from {file_weight_path}..."))
@@ -85,16 +97,6 @@ def train(model: str,
 
     # Main Training Loop
     obses = env.reset()
-
-
-    if model == 'base':
-        LOGGER.info(f"{colorstr('Model: Normal Deep Q-Network')}")
-    elif model == 'double':
-        LOGGER.info(f"{colorstr('Model: Double Deep Q-Network')}")
-    elif model == 'dueling':
-        LOGGER.info(f"{colorstr('Model: Dueling Deep Q-Network')}")
-    else:
-        raise NotImplementedError(f"{model} not found")
 
 
     LOGGER.info(f"{colorstr('Optimizer:')} {optimizer}")

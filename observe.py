@@ -8,6 +8,7 @@ from baselines_wrappers import DummyVecEnv
 from pytorch_wrappers import make_atari_deepmind, BatchedPytorchFrameStack, PytorchLazyFrames
 import time
 
+from model import DuelingDQN
 import msgpack
 from msgpack_numpy import patch as msgpack_numpy_patch
 msgpack_numpy_patch()
@@ -73,8 +74,9 @@ class Network(nn.Module):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument('model', type=str, help='select model: base, double, dueling')
+    parser.add_argument('env_id', default='BreakoutNoFrameskip-v4', type=str, help='enviroment id')
     parser.add_argument('model_weight_path', type=str, help='model weight file path')
-    parser.add_argument('--env_id', default='BreakoutNoFrameskip-v4', type=str, help='enviroment id')
 
     args = parser.parse_args()
 
@@ -88,7 +90,11 @@ if __name__ == "__main__":
 
     env = BatchedPytorchFrameStack(vec_env, k=4)
 
-    net = Network(env, device)
+    if args.model == 'base' or args.model == 'double':
+        net = Network(env, device)
+    elif args.model == 'dueling':
+        net = DuelingDQN(env, device)
+
     net = net.to(device)
 
     net.load(args.model_weight_path)
