@@ -132,4 +132,5 @@ dmypy.json
 logs/
 wandb/
 weights/
+play.py
 test.py

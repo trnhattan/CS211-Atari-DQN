@@ -1,1 +1,2 @@
-from .model import Network
+from .model import Network, DuelingDQN
+# from .duelingDQN import DuelingDQN

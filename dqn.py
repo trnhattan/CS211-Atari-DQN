@@ -9,6 +9,7 @@ import numpy as np
 import random
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+from baselines_wrappers.subproc_vec_env import SubprocVecEnv
 from pytorch_wrappers import BatchedPytorchFrameStack, PytorchLazyFrames, make_atari_deepmind
 from baselines_wrappers import Monitor, DummyVecEnv
 import msgpack
@@ -17,16 +18,16 @@ from msgpack_numpy import patch as msgback_numpy_patch
 msgback_numpy_patch()
 
 from configs import *
-from model import Network
+from model import Network, DuelingDQN
 from utils import *
 
 # Numpy warnings ignore
 np.seterr(all="ignore")
 
-def train(env_id="BreakoutNoFrameskip-v4", 
+def train(model: str,
+          env_id="BreakoutNoFrameskip-v4", 
           resume=False, 
           file_weight_path=None,
-          run_time=0, 
           file_saveName="breakout_b32_at", 
           project="Deep-Q-Learning-Network", 
           entity='devzxje', 
@@ -45,7 +46,8 @@ def train(env_id="BreakoutNoFrameskip-v4",
 
     make_env = lambda: Monitor(make_atari_deepmind(env_id=env_id, scale_values=True), allow_early_resets=True)
 
-    vec_env = DummyVecEnv([make_env for  _ in range(NUM_ENVS)])
+    # vec_env = DummyVecEnv([make_env for  _ in range(NUM_ENVS)])
+    vec_env = SubprocVecEnv([make_env for _ in range(NUM_ENVS)])
 
     env = BatchedPytorchFrameStack(vec_env, k = 4)
 
@@ -56,8 +58,20 @@ def train(env_id="BreakoutNoFrameskip-v4",
 
     # summary_writer = SummaryWriter(LOG_DIR)
 
-    online_net = Network(env, device=device).to(device)
-    target_net = Network(env, device=device).to(device)
+    if model == 'base':
+        LOGGER.info(f"{colorstr('Model: Normal Deep Q-Network')}")
+        online_net = Network(env, device=device, model=model).to(device)
+        target_net = Network(env, device=device, model=model).to(device)
+    elif model == 'double':
+        LOGGER.info(f"{colorstr('Model: Double Deep Q-Network')}")
+        online_net = Network(env, device=device, model=model).to(device)
+        target_net = Network(env, device=device, model=model).to(device)
+    elif model == 'dueling':
+        LOGGER.info(f"{colorstr('Model: Dueling Deep Q-Network')}")
+        online_net = DuelingDQN(env, device=device, model=model).to(device)
+        target_net = DuelingDQN(env, device=device, model=model).to(device)
+    else:
+        raise NotImplementedError(f"{model} not found")
 
     if resume and file_weight_path:
         LOGGER.info(colorstr('black', 'bold', f"Loading weights from {file_weight_path}..."))
@@ -87,6 +101,8 @@ def train(env_id="BreakoutNoFrameskip-v4",
 
     LOGGER.info(f"{colorstr('Optimizer:')} {optimizer}")
     LOGGER.info(f"{colorstr('BATCH_SIZE:')} {BATCH_SIZE}")
+    LOGGER.info(f"{colorstr('BUFFER_SIZE:')} {BUFFER_SIZE}")
+    LOGGER.info(f"{colorstr('MIN_REPLAY_SIZE:')} {MIN_REPLAY_SIZE}")
     BATCH_SIZE
     LOGGER.info(f"{colorstr('EPSILON_DECAY:')} {EPSILON_DECAY}")
     LOGGER.info(f"{colorstr('EPSILON_START:')} {EPSILON_START}    -    {colorstr('EPSILON_END:')} {EPSILON_END}")
@@ -95,6 +111,8 @@ def train(env_id="BreakoutNoFrameskip-v4",
 
     LOGGER.info(colorstr('black', 'bold', '%20s' + '%15s' * 4) % 
                         ('Training:', 'gpu_mem', 'AvgRew', 'AvgEpLen', 'Episodes'))
+    
+    greater_avg_rew = 0
 
     with tqdm(itertools.count(), total=100, 
             bar_format='{desc} {percentage:>7.0f}%|{bar:20}{r_bar}{bar:-10b}',
@@ -102,7 +120,7 @@ def train(env_id="BreakoutNoFrameskip-v4",
         for step in pbar:
             epsilon = np.interp(step * NUM_ENVS, [0, EPSILON_DECAY], [EPSILON_START, EPSILON_END])
             
-            rnd_sample = random.random()
+            # rnd_sample = random.random()
 
             if isinstance(obses[0], PytorchLazyFrames):
                 act_obses = np.stack([o.get_frames() for o in obses])
@@ -150,15 +168,13 @@ def train(env_id="BreakoutNoFrameskip-v4",
 
             if step % SAVE_INTERVAL == 0 and step != 0:
                 LOGGER.info(f"\n{colorstr('black', 'bold', f'Saving model at {step}...')}")
-                if run_time == 1:
-                    online_net.save(os.path.join(SAVE_PATH, f"{file_saveName}{step // SAVE_INTERVAL}0k.pack"))
-                else:
-                    online_net.save(os.path.join(SAVE_PATH, f"{file_saveName}{run_time * (step // SAVE_INTERVAL)}0k.pack"))
+                online_net.save(os.path.join(SAVE_PATH, f"{file_saveName}{step // SAVE_INTERVAL}0k.pack"))
                 pbar.update(5)
 
 if __name__ == "__main__":
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     parser = argparse.ArgumentParser()
+    parser.add_argument('--model', default='base', type=str, help='select model: base, double, dueling')
     parser.add_argument('--env_id', default='ALE/Breakout-v5', type=str, help='enviroment id')
     parser.add_argument('--resume', default=False, type=bool, help="continue traning")
     parser.add_argument('--file_weight_path', type=str, help="pretrained weight path")
@@ -176,11 +192,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    train(env_id=args.env_id, 
+    train(model=args.model, 
+          env_id=args.env_id, 
           resume= args.resume, 
           file_weight_path=args.file_weight_path, 
           file_saveName= args.file_saveName, 
-          run_time=args.run_time,
           project=args.wandb_project,
           entity=args.wandb_entity,
           name=args.wandb_session,
