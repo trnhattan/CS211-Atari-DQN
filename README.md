@@ -1,5 +1,5 @@
 # 📚 CS211-Atari-DQN
-This is an assignment of **CS221-Artificial Inteligent**
+This is an assignment of **CS221-Artificial Intelligent**
 
 ## 📂 Tasks:
 * **Implement and evaluation 03 algorithms:**
