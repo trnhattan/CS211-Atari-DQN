@@ -33,9 +33,19 @@ And achieved the results below:
 ## 📌 Usage:
 ### Training:
 ```bash
-usage: dqn.py [-h] [--model MODEL] [--env_id ENV_ID] [--resume RESUME] [--file_weight_path FILE_WEIGHT_PATH] [--file_saveName FILE_SAVENAME] [--run_time RUN_TIME]
-              [--wandb_project WANDB_PROJECT] [--wandb_entity WANDB_ENTITY] [--wandb_session WANDB_SESSION] [--wandb_id WANDB_ID] [--wandb_resume WANDB_RESUME] [--wandb_relogin WANDB_RELOGIN]
-              [--device DEVICE]
+usage: dqn.py [-h] [--model MODEL] 
+                   [--env_id ENV_ID] 
+                   [--resume RESUME] 
+                   [--file_weight_path FILE_WEIGHT_PATH] 
+                   [--file_saveName FILE_SAVENAME] 
+                   [--run_time RUN_TIME]
+                   [--wandb_project WANDB_PROJECT]
+                   [--wandb_entity WANDB_ENTITY] 
+                   [--wandb_session WANDB_SESSION]
+                   [--wandb_id WANDB_ID]
+                   [--wandb_resume WANDB_RESUME]
+                   [--wandb_relogin WANDB_RELOGIN]
+                   [--device DEVICE]
 
 optional arguments:
   -h, --help            show this help message and exit
